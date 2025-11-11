@@ -1,0 +1,44 @@
+# Don't modify this
+ConfigVersion: 1.0
+
+# EntityPortalLock Plugin Configuration File
+# Mode: blacklist=true (block listed entities), false (allow only listed)
+ListMode:
+  Blacklist: true
+
+# Reference entity types on this Website:
+# https://hub.spigotmc.org/javadocs/spigot/org/bukkit/entity/EntityType.html
+EntityTypeList:
+  - DROPPED_ITEM
+
+# Messages Prefix
+Prefix: "<gold>[<white>EntityPortalLock<gold>]<reset>"
+
+# Language Settings
+Messages:
+  config_load_fail: "%Prefix% <red>Failed to load default config"
+  command_register_fail: "%Prefix% <red>Failed to register command <white>/eplock"
+
+  enable_plugin: "%Prefix% <white>Enable EntityPortalLock"
+  disable_plugin: "%Prefix% <white>Disable EntityPortalLock"
+
+  entity_list: "%Prefix% <green>EntityTypeList: <gray>%list%"
+  list_empty: "%Prefix% <gray>EntityTypeList is empty"
+
+  invalid_command: "%Prefix% <red>Invalid command! <gray>Usage: <white>/eplock [add|remove|reload|list]"
+  invalid_type: "%Prefix% <red>Invalid EntityType: <white>%entity%"
+
+  no_permission: "%Prefix% <red>You don't have permission for this command!"
+  reload_success: "%Prefix% <green>EntityPortalLock config reloaded"
+
+  type_add: "%Prefix% <green>Successfully added EntityType: <white>%entity%"
+  type_remove: "%Prefix% <green>Successfully removed EntityType: <white>%entity%"
+
+  type_already_in_list: "%Prefix% <gray>Entity: <white>%entity% <gray>is Already in the list"
+  type_not_in_list: "%Prefix% <gray>Entity: <white>%entity% <gray>is Not in the list"
+
+  type_load_success: "%Prefix% <green>Load EntityType: <gray>%entity%"
+  type_load_warning: "%Prefix% <red>EntityType Warning: <white>%entity%<red>, ignored"
+
+  usage_add: "%Prefix% <green>Please specify the entity type, <gray>Usage: <white>/eplock add <EntityType>"
+  usage_remove: "%Prefix% <green>Please specify the entity type, <gray>Usage: <white>/eplock remove <EntityType>"

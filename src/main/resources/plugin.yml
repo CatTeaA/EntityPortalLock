@@ -1,0 +1,18 @@
+name: EntityPortalLock
+main: com.EntityPortalLock.EntityPortalLock
+version: ${project.version}
+description: EntityPortalLock
+api-version: 1.13
+author: CatTea
+
+commands:
+  entityportallock:
+    usage: /<command> [add|remove|reload|list]
+    aliases: [ eplock ]
+    description: EntityPortalLock command
+    permission: entityportallock.admin
+
+permissions:
+  entityportallock.admin:
+    default: op
+    description: eplock | Permission
