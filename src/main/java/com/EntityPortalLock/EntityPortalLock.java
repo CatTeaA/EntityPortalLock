@@ -23,26 +23,27 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class EntityPortalLock extends JavaPlugin implements Listener, CommandExecutor, TabCompleter {
 
-	private final Set<EntityType> targetEntities = ConcurrentHashMap.newKeySet();
-	private volatile boolean isBlacklistMode = true;
+	private final Set<EntityType> targetEntities = EnumSet.noneOf(EntityType.class);
+	private boolean isBlacklistMode = true;
 	private FileConfiguration defaultConfig;
 	private BukkitAudiences adventure;
 	private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-	private volatile String PREFIX = "";
+	private String PREFIX = "";
 
 	private static final List<String> ALL_ENTITY_TYPES = Arrays.stream(EntityType.values())
 			.map(EntityType::name)
@@ -69,7 +70,7 @@ public class EntityPortalLock extends JavaPlugin implements Listener, CommandExe
 		message = message.replace("%Prefix%", PREFIX);
 		if (replacements != null) {
 			for (int i = 0; i < replacements.length - 1; i += 2) {
-				message = message.replace(replacements[i], replacements[i + 1]);
+				message = message.replace(replacements[i], MINI_MESSAGE.escapeTags(replacements[i + 1]));
 			}
 		}
 		Component component = MINI_MESSAGE.deserialize(message);
@@ -87,10 +88,11 @@ public class EntityPortalLock extends JavaPlugin implements Listener, CommandExe
 	public void onEnable() {
 		new Metrics(this, 27946);
 		this.adventure = BukkitAudiences.create(this);
-		try {
-			defaultConfig = YamlConfiguration.loadConfiguration(
-					new InputStreamReader(Objects.requireNonNull(getResource("config.yml")), StandardCharsets.UTF_8)
-			);
+		try (InputStream stream = Objects.requireNonNull(getResource("config.yml"));
+			 InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+
+			defaultConfig = YamlConfiguration.loadConfiguration(reader);
+
 		} catch (Exception e) {
 			sendMessage(Bukkit.getConsoleSender(), "Messages.config_load_fail");
 		}
@@ -231,13 +233,14 @@ public class EntityPortalLock extends JavaPlugin implements Listener, CommandExe
 			}
 		}
 		List<String> entityNames = config.getStringList("EntityTypeList");
-		List<EntityType> tempEntities = new ArrayList<>();
+		Set<EntityType> tempEntities = EnumSet.noneOf(EntityType.class);
 		List<String> loadedEntityNames = new ArrayList<>();
 		for (String name : entityNames) {
 			try {
 				EntityType type = EntityType.valueOf(name.toUpperCase(Locale.ROOT));
-				tempEntities.add(type);
-				loadedEntityNames.add(type.name());
+				if (tempEntities.add(type)) {
+					loadedEntityNames.add(type.name());
+				}
 			} catch (IllegalArgumentException e) {
 				sendMessage(Bukkit.getConsoleSender(), "Messages.type_load_warning", "%entity%", name);
 			}
@@ -248,7 +251,6 @@ public class EntityPortalLock extends JavaPlugin implements Listener, CommandExe
 			String entityList = String.join(", ", loadedEntityNames);
 			sendMessage(Bukkit.getConsoleSender(), "Messages.type_load_success", "%entity%", entityList);
 		}
-		tempEntities.sort(Comparator.comparing(EntityType::name));
 		targetEntities.clear();
 		targetEntities.addAll(tempEntities);
 	}
@@ -278,14 +280,14 @@ public class EntityPortalLock extends JavaPlugin implements Listener, CommandExe
 		return isBlacklistMode == targetEntities.contains(type);
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onEntityPortal(EntityPortalEvent event) {
 		if (shouldDeny(event.getEntityType())) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerPortal(PlayerPortalEvent event) {
 		if (shouldDeny(event.getPlayer().getType())) {
 			event.setCancelled(true);
